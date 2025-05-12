@@ -11,11 +11,16 @@ from langchain.chat_models import init_chat_model
 
 model = init_chat_model("llama3-8b-8192", model_provider="groq")
 
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate
 
-messages = [SystemMessage("Translate this message from English to Hindi"), HumanMessage("Hi!")]
+system_template = "Translate following from english into {language}"
 
-response = model.invoke(messages)
+prompt_template = ChatPromptTemplate.from_messages([("system", system_template), ("user", "{text}")])
 
-print(response)
+prompt = prompt_template.invoke({ "language": "hindi", "text": "My name is Naman Jain"})
+
+
+response = model.invoke(prompt)
+
+print(response.content)
 
