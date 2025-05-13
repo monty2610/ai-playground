@@ -14,9 +14,9 @@ all_splits = text_splitter.split_documents(docs)
 
 #print(len(all_splits))
 
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_ollama import OllamaEmbeddings
 
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+embeddings = OllamaEmbeddings(model="llama3")
 
 from langchain_core.vectorstores import InMemoryVectorStore
 

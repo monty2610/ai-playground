@@ -4,4 +4,4 @@ langchain-core
 langchain[groq]
 langchain-community 
 pypdf
-langchain-huggingface
+langchain-ollama
