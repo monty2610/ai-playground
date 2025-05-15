@@ -1,9 +1,11 @@
 import os, getpass
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.graph import MessagesState, StateGraph, START, END
+from langgraph.prebuilt import tools_condition
+from langgraph.prebuilt import ToolNode
 from IPython.display import Image, display
 
 load_dotenv()
@@ -32,21 +34,52 @@ def multiply(a: int, b: int) -> int:
     """
     return a * b
 
-llm_with_tools = llm.bind_tools([multiply])
+# This will be a tool
+def add(a: int, b: int) -> int:
+    """Adds a and b.
+
+    Args:
+        a: first int
+        b: second int
+    """
+    return a + b
+
+def divide(a: int, b: int) -> float:
+    """Divide a and b.
+
+    Args:
+        a: first int
+        b: second int
+    """
+    return a / b
+
+tools = [add, multiply, divide]
+
+llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
+
+sys_msg = SystemMessage(content="You are a helpful assistant tasked with performing arithmetic on a set of inputs.")
 
 #tool_call = llm_with_tools.invoke([HumanMessage(content=f"What is 2 multiplied by 3", name="Lance")])
 
-class MessagesState(MessagesState):
-    pass
+def assistant(state: MessagesState):
+   return {"messages": [llm_with_tools.invoke([sys_msg] + state["messages"])]}
 
 def tool_calling_llm(state: MessagesState):
     return {"messages": [llm_with_tools.invoke(state["messages"])]}
 
 builder = StateGraph(MessagesState)
 
-builder.add_node("tool_calling_llm", tool_calling_llm)
-builder.add_edge(START, "tool_calling_llm")
-builder.add_edge("tool_calling_llm", END)
+builder.add_node("assistant", assistant)
+builder.add_node("tools", ToolNode(tools))
+
+builder.add_edge(START, "assistant")
+builder.add_conditional_edges(
+    "assistant",
+    # If the latest message (result) from assistant is a tool call -> tools_condition routes to tools
+    # If the latest message (result) from assistant is a not a tool call -> tools_condition routes to END
+    tools_condition,
+)
+builder.add_edge("tools", "assistant")
 
 graph = builder.compile()
 
@@ -54,7 +87,10 @@ graph = builder.compile()
 
 #messages = graph.invoke({"messages": HumanMessage(content="Hello!")})
 
-messages = graph.invoke({"messages": HumanMessage(content="Multiply 2 and 3")})
+#messages = graph.invoke({"messages": HumanMessage(content="Multiply 2 and 3")})
+
+messages = [HumanMessage(content="Add 3 and 4. Multiply the output by 2. Divide the output by 5")]
+messages = graph.invoke({"messages": messages})
 
 for m in messages['messages']:
     m.pretty_print()
