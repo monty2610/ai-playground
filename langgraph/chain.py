@@ -50,4 +50,11 @@ builder.add_edge("tool_calling_llm", END)
 
 graph = builder.compile()
 
-display(Image(graph.get_graph().draw_mermaid_png()))
+#display(Image(graph.get_graph().draw_mermaid_png()))
+
+#messages = graph.invoke({"messages": HumanMessage(content="Hello!")})
+
+messages = graph.invoke({"messages": HumanMessage(content="Multiply 2 and 3")})
+
+for m in messages['messages']:
+    m.pretty_print()
