@@ -1,3 +1,7 @@
 langchain
 python-dotenv
+langchain-core
 langchain[groq]
+langchain-community 
+pypdf
+langchain-ollama
