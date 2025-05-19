@@ -1,0 +1,10 @@
+{
+  "name": "A11y External",
+  "description": "A chrome extension to test accessibility of given page",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "logo.svg"
+  }
+}
